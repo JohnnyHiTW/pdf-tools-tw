@@ -139,13 +139,15 @@
 
 ## 🚀 立即開始使用
 
+### 👉 [https://pdf-tools-tw.streamlit.app](https://pdf-tools-tw.streamlit.app) 👈
+
 <a href="https://pdf-tools-tw.streamlit.app">
   <img src="https://img.shields.io/badge/🌐_立即使用_PDF_工具箱-點擊前往-FF4B4B?style=for-the-badge&labelColor=262730" alt="立即使用" width="400">
 </a>
 
 <br><br>
 
-**👆 點擊上方按鈕，免安裝直接使用！**
+**👆 點擊上方連結或按鈕，免安裝直接使用！**
 
 ---
 
