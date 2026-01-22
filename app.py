@@ -153,25 +153,141 @@ def format_size(size: int) -> str:
         return f"{size/(1024*1024):.2f} MB"
 
 
+def compress_image(image_data: bytes, quality: int) -> bytes:
+    """壓縮單張圖片"""
+    try:
+        img = Image.open(io.BytesIO(image_data))
+
+        # 轉換為 RGB（如果是 RGBA 或其他模式）
+        if img.mode in ('RGBA', 'P', 'LA'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' or img.mode == 'LA' else None)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # 根據品質等級縮小圖片尺寸
+        if quality <= 30:
+            # 高壓縮：縮小到 50%
+            new_size = (int(img.width * 0.5), int(img.height * 0.5))
+            if new_size[0] > 100 and new_size[1] > 100:
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+        elif quality <= 60:
+            # 中壓縮：縮小到 70%
+            new_size = (int(img.width * 0.7), int(img.height * 0.7))
+            if new_size[0] > 100 and new_size[1] > 100:
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+        # 儲存為 JPEG 並壓縮
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=quality, optimize=True)
+        return output.getvalue()
+    except Exception:
+        return image_data
+
+
 def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
     """壓縮 PDF 檔案"""
     original_size = len(input_bytes)
+
+    # 根據品質設定壓縮參數
+    quality_settings = {
+        "low": 85,      # 低度壓縮，高品質
+        "medium": 50,   # 中度壓縮
+        "high": 25      # 高度壓縮，低品質
+    }
+    img_quality = quality_settings.get(quality, 50)
 
     try:
         input_stream = io.BytesIO(input_bytes)
         reader = PdfReader(input_stream)
         writer = PdfWriter()
 
-        # 複製所有頁面並壓縮
-        for page_num in range(len(reader.pages)):
-            page = reader.pages[page_num]
+        # 複製所有頁面
+        for page in reader.pages:
             writer.add_page(page)
+
+        # 壓縮 PDF 中的圖片
+        for page in writer.pages:
+            if '/Resources' in page and '/XObject' in page['/Resources']:
+                x_objects = page['/Resources']['/XObject'].get_object()
+                for obj_name in x_objects:
+                    x_obj = x_objects[obj_name]
+                    if x_obj['/Subtype'] == '/Image':
+                        try:
+                            # 取得圖片資料
+                            if '/Filter' in x_obj:
+                                filter_type = x_obj['/Filter']
+                                if filter_type == '/DCTDecode':
+                                    # JPEG 圖片
+                                    img_data = x_obj._data
+                                    compressed = compress_image(img_data, img_quality)
+                                    if len(compressed) < len(img_data):
+                                        x_obj._data = compressed
+                                elif filter_type == '/FlateDecode':
+                                    # PNG 等圖片
+                                    width = x_obj['/Width']
+                                    height = x_obj['/Height']
+                                    if '/ColorSpace' in x_obj:
+                                        color_space = x_obj['/ColorSpace']
+                                        if color_space == '/DeviceRGB':
+                                            mode = 'RGB'
+                                        elif color_space == '/DeviceGray':
+                                            mode = 'L'
+                                        else:
+                                            mode = 'RGB'
+                                    else:
+                                        mode = 'RGB'
+
+                                    try:
+                                        import zlib
+                                        img_data = zlib.decompress(x_obj._data)
+                                        img = Image.frombytes(mode, (width, height), img_data)
+
+                                        if img.mode != 'RGB':
+                                            img = img.convert('RGB')
+
+                                        # 縮小尺寸
+                                        if img_quality <= 30:
+                                            new_size = (int(width * 0.5), int(height * 0.5))
+                                        elif img_quality <= 60:
+                                            new_size = (int(width * 0.7), int(height * 0.7))
+                                        else:
+                                            new_size = (width, height)
+
+                                        if new_size[0] > 100 and new_size[1] > 100:
+                                            img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+                                        output = io.BytesIO()
+                                        img.save(output, format='JPEG', quality=img_quality, optimize=True)
+                                        compressed = output.getvalue()
+
+                                        if len(compressed) < len(x_obj._data):
+                                            x_obj._data = compressed
+                                            x_obj['/Filter'] = '/DCTDecode'
+                                            x_obj['/Width'] = new_size[0]
+                                            x_obj['/Height'] = new_size[1]
+                                    except Exception:
+                                        pass
+                        except Exception:
+                            continue
+
+        # 壓縮內容流
+        for page in writer.pages:
+            page.compress_content_streams()
 
         # 寫入輸出
         output_stream = io.BytesIO()
         writer.write(output_stream)
         output_bytes = output_stream.getvalue()
         compressed_size = len(output_bytes)
+
+        # 如果壓縮後反而變大，返回原始檔案
+        if compressed_size >= original_size:
+            output_bytes = input_bytes
+            compressed_size = original_size
 
     except Exception as e:
         # 如果壓縮失敗，返回原始檔案
