@@ -189,16 +189,8 @@ def compress_image(image_data: bytes, quality: int) -> bytes:
 
 
 def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
-    """壓縮 PDF 檔案"""
+    """壓縮 PDF 檔案 - 使用安全的壓縮方式"""
     original_size = len(input_bytes)
-
-    # 根據品質設定壓縮參數
-    quality_settings = {
-        "low": 80,      # 低度壓縮，高品質
-        "medium": 45,   # 中度壓縮
-        "high": 12      # 高度壓縮，極低品質
-    }
-    img_quality = quality_settings.get(quality, 45)
 
     try:
         input_stream = io.BytesIO(input_bytes)
@@ -209,74 +201,12 @@ def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
         for page in reader.pages:
             writer.add_page(page)
 
-        # 壓縮 PDF 中的圖片
-        for page in writer.pages:
-            if '/Resources' in page and '/XObject' in page['/Resources']:
-                x_objects = page['/Resources']['/XObject'].get_object()
-                for obj_name in x_objects:
-                    x_obj = x_objects[obj_name]
-                    if x_obj['/Subtype'] == '/Image':
-                        try:
-                            # 取得圖片資料
-                            if '/Filter' in x_obj:
-                                filter_type = x_obj['/Filter']
-                                if filter_type == '/DCTDecode':
-                                    # JPEG 圖片
-                                    img_data = x_obj._data
-                                    compressed = compress_image(img_data, img_quality)
-                                    if len(compressed) < len(img_data):
-                                        x_obj._data = compressed
-                                elif filter_type == '/FlateDecode':
-                                    # PNG 等圖片
-                                    width = x_obj['/Width']
-                                    height = x_obj['/Height']
-                                    if '/ColorSpace' in x_obj:
-                                        color_space = x_obj['/ColorSpace']
-                                        if color_space == '/DeviceRGB':
-                                            mode = 'RGB'
-                                        elif color_space == '/DeviceGray':
-                                            mode = 'L'
-                                        else:
-                                            mode = 'RGB'
-                                    else:
-                                        mode = 'RGB'
-
-                                    try:
-                                        import zlib
-                                        img_data = zlib.decompress(x_obj._data)
-                                        img = Image.frombytes(mode, (width, height), img_data)
-
-                                        if img.mode != 'RGB':
-                                            img = img.convert('RGB')
-
-                                        # 縮小尺寸
-                                        if img_quality <= 15:
-                                            new_size = (int(width * 0.35), int(height * 0.35))
-                                        elif img_quality <= 50:
-                                            new_size = (int(width * 0.6), int(height * 0.6))
-                                        else:
-                                            new_size = (width, height)
-
-                                        if new_size[0] > 50 and new_size[1] > 50:
-                                            img = img.resize(new_size, Image.Resampling.LANCZOS)
-
-                                        output = io.BytesIO()
-                                        img.save(output, format='JPEG', quality=img_quality, optimize=True)
-                                        compressed = output.getvalue()
-
-                                        if len(compressed) < len(x_obj._data):
-                                            x_obj._data = compressed
-                                            x_obj['/Filter'] = '/DCTDecode'
-                                            x_obj['/Width'] = new_size[0]
-                                            x_obj['/Height'] = new_size[1]
-                                    except Exception:
-                                        pass
-                        except Exception:
-                            continue
-
-        # 壓縮內容流
+        # 只壓縮內容流（安全的壓縮方式）
         for page in writer.pages:
             page.compress_content_streams()
+
+        # 移除不必要的元數據以減少檔案大小
+        writer.add_metadata({})
 
         # 寫入輸出
         output_stream = io.BytesIO()
