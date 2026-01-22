@@ -484,4 +484,52 @@ def main_app():
 
 # 主程式入口
 if __name__ == "__main__":
-    main_app()
+    # 檢查是否已經顯示過啟動畫面
+    if "splash_done" not in st.session_state:
+        st.session_state.splash_done = False
+
+    if not st.session_state.splash_done:
+        # 顯示啟動畫面
+        splash = st.empty()
+        with splash.container():
+            st.markdown("""
+            <style>
+                #MainMenu {visibility: hidden;}
+                footer {visibility: hidden;}
+                header {visibility: hidden;}
+            </style>
+            """, unsafe_allow_html=True)
+
+            # 顯示 logo 圖片
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.image("assets/splash.png", use_container_width=True)
+                st.markdown("""
+                <div style="text-align: center; margin-top: 20px;">
+                    <div style="background: #e0e0e0; border-radius: 10px; height: 10px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; width: 100%; animation: loading 3s ease-in-out;"></div>
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">載入中...</p>
+                </div>
+                <style>
+                    @keyframes loading {
+                        0% { width: 0%; }
+                        100% { width: 100%; }
+                    }
+                </style>
+                """, unsafe_allow_html=True)
+
+        # 等待 4 秒
+        time.sleep(4)
+
+        # 標記啟動畫面已完成
+        st.session_state.splash_done = True
+
+        # 清除啟動畫面
+        splash.empty()
+
+        # 重新載入頁面
+        st.rerun()
+    else:
+        # 顯示主應用程式
+        main_app()
