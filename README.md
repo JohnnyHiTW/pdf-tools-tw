@@ -104,29 +104,7 @@
 
 <div align="center">
 
-<img src="assets/作者資訊.png" alt="作者資訊" width="600">
-
 ### 阿亮老師
-
-<table>
-<tr>
-<td align="center" width="50%">
-
-**🎓 現職**
-
-新北市安溪國中 資訊科技教師
-
-</td>
-<td align="center" width="50%">
-
-**🏆 獲獎紀錄**
-
-112 年教育部數位學習績優教師<br>
-113 年教育部數位學習績優教師
-
-</td>
-</tr>
-</table>
 
 [![YouTube](https://img.shields.io/badge/YouTube-阿亮老師-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@Liang-yt02)
 [![Facebook](https://img.shields.io/badge/Facebook-3A科技研究社-1877F2?style=for-the-badge&logo=facebook&logoColor=white)](https://www.facebook.com/groups/2754139931432955)
