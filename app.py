@@ -484,14 +484,4 @@ def main_app():
 
 # 主程式入口
 if __name__ == "__main__":
-    # 初始化 session state
-    if "splash_shown" not in st.session_state:
-        st.session_state.splash_shown = False
-
-    # 顯示啟動畫面（只在第一次載入時）
-    if not st.session_state.splash_shown:
-        show_splash_screen()
-        st.session_state.splash_shown = True
-
-    # 顯示主應用程式
     main_app()
