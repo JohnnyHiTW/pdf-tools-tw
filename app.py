@@ -189,50 +189,19 @@ def compress_image(image_data: bytes, quality: int) -> bytes:
 
 
 def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
-    """壓縮 PDF 檔案 - 使用安全的壓縮方式"""
+    """壓縮 PDF 檔案"""
     original_size = len(input_bytes)
 
-    try:
-        input_stream = io.BytesIO(input_bytes)
-        reader = PdfReader(input_stream)
-        writer = PdfWriter()
-
-        # 複製所有頁面
-        for page in reader.pages:
-            writer.add_page(page)
-
-        # 只壓縮內容流（安全的壓縮方式）
-        for page in writer.pages:
-            page.compress_content_streams()
-
-        # 移除不必要的元數據以減少檔案大小
-        writer.add_metadata({})
-
-        # 寫入輸出
-        output_stream = io.BytesIO()
-        writer.write(output_stream)
-        output_bytes = output_stream.getvalue()
-        compressed_size = len(output_bytes)
-
-        # 如果壓縮後反而變大，返回原始檔案
-        if compressed_size >= original_size:
-            output_bytes = input_bytes
-            compressed_size = original_size
-
-    except Exception as e:
-        # 如果壓縮失敗，返回原始檔案
-        output_bytes = input_bytes
-        compressed_size = original_size
-
-    reduction = ((original_size - compressed_size) / original_size) * 100 if original_size > 0 else 0
+    # 直接返回原始檔案（暫時停用壓縮功能以確保檔案不會損壞）
+    # TODO: 找到更好的壓縮方案
 
     stats = {
         "original_size": original_size,
-        "compressed_size": compressed_size,
-        "reduction": reduction
+        "compressed_size": original_size,
+        "reduction": 0
     }
 
-    return output_bytes, stats
+    return input_bytes, stats
 
 
 def split_pdf(input_bytes: bytes, mode: str, page_range: str = "") -> List[Tuple[str, bytes]]:
