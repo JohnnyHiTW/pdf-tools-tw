@@ -489,44 +489,87 @@ if __name__ == "__main__":
         st.session_state.splash_done = False
 
     if not st.session_state.splash_done:
-        # 顯示啟動畫面
-        splash = st.empty()
-        with splash.container():
-            st.markdown("""
-            <style>
-                #MainMenu {visibility: hidden;}
-                footer {visibility: hidden;}
-                header {visibility: hidden;}
-            </style>
-            """, unsafe_allow_html=True)
+        # 讀取圖片並轉為 base64
+        splash_image_path = Path("assets/splash.png")
+        if splash_image_path.exists():
+            img_base64 = get_image_base64(str(splash_image_path))
+        else:
+            img_base64 = ""
 
-            # 顯示 logo 圖片
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                st.image("assets/splash.png", use_container_width=True)
-                st.markdown("""
-                <div style="text-align: center; margin-top: 20px;">
-                    <div style="background: #e0e0e0; border-radius: 10px; height: 10px; overflow: hidden;">
-                        <div style="background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; width: 100%; animation: loading 3s ease-in-out;"></div>
-                    </div>
-                    <p style="color: #666; margin-top: 10px;">載入中...</p>
+        # 全螢幕啟動畫面
+        st.markdown(f"""
+        <style>
+            #MainMenu {{visibility: hidden;}}
+            footer {{visibility: hidden;}}
+            header {{visibility: hidden;}}
+            .stApp {{
+                background: transparent;
+            }}
+            .block-container {{
+                padding: 0 !important;
+                max-width: 100% !important;
+            }}
+            .splash-fullscreen {{
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-image: url('data:image/png;base64,{img_base64}');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                align-items: center;
+                z-index: 9999;
+            }}
+            .progress-wrapper {{
+                width: 60%;
+                max-width: 500px;
+                margin-bottom: 80px;
+            }}
+            .progress-bg {{
+                background: rgba(255,255,255,0.5);
+                border-radius: 10px;
+                height: 12px;
+                overflow: hidden;
+            }}
+            .progress-fill {{
+                background: linear-gradient(90deg, #4CAF50, #8BC34A);
+                height: 100%;
+                width: 0%;
+                border-radius: 10px;
+                animation: loadingBar 3.5s ease-in-out forwards;
+            }}
+            .loading-text {{
+                color: #333;
+                font-size: 1rem;
+                margin-top: 15px;
+                text-align: center;
+                font-family: "Microsoft JhengHei", sans-serif;
+            }}
+            @keyframes loadingBar {{
+                0% {{ width: 0%; }}
+                100% {{ width: 100%; }}
+            }}
+        </style>
+        <div class="splash-fullscreen">
+            <div class="progress-wrapper">
+                <div class="progress-bg">
+                    <div class="progress-fill"></div>
                 </div>
-                <style>
-                    @keyframes loading {
-                        0% { width: 0%; }
-                        100% { width: 100%; }
-                    }
-                </style>
-                """, unsafe_allow_html=True)
+                <p class="loading-text">載入中...</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # 等待 4 秒
         time.sleep(4)
 
         # 標記啟動畫面已完成
         st.session_state.splash_done = True
-
-        # 清除啟動畫面
-        splash.empty()
 
         # 重新載入頁面
         st.rerun()
