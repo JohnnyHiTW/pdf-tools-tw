@@ -5,15 +5,13 @@
 ### 化繁為簡凝雲墨，拆骨離魂鑄新篇
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pdf-tools-tw.streamlit.app)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ChatGPT3a01/pdf-tools-tw?style=social)](https://github.com/ChatGPT3a01/pdf-tools-tw)
 
-<img src="assets/splash.png" alt="PDF 工具箱" width="600">
+<img src="assets/splash.png" alt="PDF 工具箱" width="700">
 
 **免費、開源、無廣告的線上 PDF 處理工具**
 
-[立即使用](https://pdf-tools-tw.streamlit.app) · [回報問題](https://github.com/ChatGPT3a01/pdf-tools-tw/issues) · [功能建議](https://github.com/ChatGPT3a01/pdf-tools-tw/issues)
+[🚀 立即使用](https://pdf-tools-tw.streamlit.app)
 
 </div>
 
@@ -77,41 +75,29 @@
 
 ---
 
-## 🖥️ 畫面預覽
+## 📖 使用教學
 
 <div align="center">
 
-| 壓縮功能 | 拆分功能 | 合併功能 |
-|:---:|:---:|:---:|
-| ![壓縮](https://via.placeholder.com/250x150/E3F2FD/1976D2?text=壓縮+PDF) | ![拆分](https://via.placeholder.com/250x150/E8F5E9/388E3C?text=拆分+PDF) | ![合併](https://via.placeholder.com/250x150/FFF3E0/F57C00?text=合併+PDF) |
+### Step 1️⃣ 開啟網站
 
-</div>
-
----
-
-## 🚀 快速開始
-
-### 線上使用（推薦）
-
-直接點擊下方按鈕，無需安裝：
+點擊下方按鈕進入工具
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pdf-tools-tw.streamlit.app)
 
-### 本地安裝
+</div>
 
-```bash
-# 1. 複製專案
-git clone https://github.com/ChatGPT3a01/pdf-tools-tw.git
-cd pdf-tools-tw
+### Step 2️⃣ 選擇功能
 
-# 2. 安裝依賴
-pip install -r requirements.txt
+| 功能 | 說明 |
+|:---:|:---|
+| 📦 **壓縮** | 上傳 PDF → 選擇壓縮程度 → 點擊「開始壓縮」→ 下載 |
+| ✂️ **拆分** | 上傳 PDF → 選擇拆分方式 → 點擊「開始拆分」→ 下載 ZIP |
+| 🔗 **合併** | 上傳多個 PDF → 點擊「開始合併」→ 下載合併檔案 |
 
-# 3. 啟動應用
-streamlit run app.py
-```
+### Step 3️⃣ 下載結果
 
-開啟瀏覽器訪問 `http://localhost:8501` 即可使用！
+處理完成後，點擊下載按鈕即可取得檔案！
 
 ---
 
@@ -124,57 +110,6 @@ streamlit run app.py
 | 🔴 高度 | 30% | 上傳作業、Email 附件（目標 4MB 以下） | 50-80% |
 
 > ⚠️ **注意**：實際壓縮效果取決於原始 PDF 的內容。純文字 PDF 壓縮空間有限，包含大量圖片的 PDF 壓縮效果較佳。
-
----
-
-## 🛠️ 技術架構
-
-```
-pdf-tools-tw/
-├── 📄 app.py              # 主程式（Streamlit 應用）
-├── 📄 requirements.txt    # Python 依賴套件
-├── 📄 README.md           # 專案說明
-├── 📄 LICENSE             # MIT 授權條款
-├── 📁 assets/             # 靜態資源
-│   └── 🖼️ splash.png      # 啟動畫面圖片
-└── 📁 .streamlit/         # Streamlit 設定
-    └── ⚙️ config.toml     # 主題與伺服器設定
-```
-
-### 使用技術
-
-- **[Streamlit](https://streamlit.io/)** - 網頁應用框架
-- **[pikepdf](https://github.com/pikepdf/pikepdf)** - PDF 處理與壓縮
-- **[pypdf](https://github.com/py-pdf/pypdf)** - PDF 讀寫操作
-- **[Pillow](https://python-pillow.org/)** - 圖片壓縮處理
-
----
-
-## 🤝 貢獻指南
-
-歡迎各種形式的貢獻！
-
-1. 🍴 Fork 這個專案
-2. 🌿 建立功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 💾 提交變更 (`git commit -m 'Add some AmazingFeature'`)
-4. 📤 推送分支 (`git push origin feature/AmazingFeature`)
-5. 🔃 開啟 Pull Request
-
----
-
-## 📜 授權條款
-
-本專案採用 **MIT License** 授權 - 詳見 [LICENSE](LICENSE) 檔案
-
----
-
-## 💖 支持專案
-
-如果這個工具對你有幫助，歡迎：
-
-- ⭐ 給專案一顆星星
-- 🐛 回報問題或建議
-- 📢 分享給需要的朋友
 
 ---
 
