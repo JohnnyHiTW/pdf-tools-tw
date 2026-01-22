@@ -169,15 +169,15 @@ def compress_image(image_data: bytes, quality: int) -> bytes:
             img = img.convert('RGB')
 
         # 根據品質等級縮小圖片尺寸
-        if quality <= 30:
-            # 高壓縮：縮小到 50%
-            new_size = (int(img.width * 0.5), int(img.height * 0.5))
-            if new_size[0] > 100 and new_size[1] > 100:
+        if quality <= 15:
+            # 高壓縮：縮小到 35%
+            new_size = (int(img.width * 0.35), int(img.height * 0.35))
+            if new_size[0] > 50 and new_size[1] > 50:
                 img = img.resize(new_size, Image.Resampling.LANCZOS)
-        elif quality <= 60:
-            # 中壓縮：縮小到 70%
-            new_size = (int(img.width * 0.7), int(img.height * 0.7))
-            if new_size[0] > 100 and new_size[1] > 100:
+        elif quality <= 50:
+            # 中壓縮：縮小到 60%
+            new_size = (int(img.width * 0.6), int(img.height * 0.6))
+            if new_size[0] > 80 and new_size[1] > 80:
                 img = img.resize(new_size, Image.Resampling.LANCZOS)
 
         # 儲存為 JPEG 並壓縮
@@ -194,11 +194,11 @@ def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
 
     # 根據品質設定壓縮參數
     quality_settings = {
-        "low": 85,      # 低度壓縮，高品質
-        "medium": 50,   # 中度壓縮
-        "high": 25      # 高度壓縮，低品質
+        "low": 80,      # 低度壓縮，高品質
+        "medium": 45,   # 中度壓縮
+        "high": 12      # 高度壓縮，極低品質
     }
-    img_quality = quality_settings.get(quality, 50)
+    img_quality = quality_settings.get(quality, 45)
 
     try:
         input_stream = io.BytesIO(input_bytes)
@@ -250,14 +250,14 @@ def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
                                             img = img.convert('RGB')
 
                                         # 縮小尺寸
-                                        if img_quality <= 30:
-                                            new_size = (int(width * 0.5), int(height * 0.5))
-                                        elif img_quality <= 60:
-                                            new_size = (int(width * 0.7), int(height * 0.7))
+                                        if img_quality <= 15:
+                                            new_size = (int(width * 0.35), int(height * 0.35))
+                                        elif img_quality <= 50:
+                                            new_size = (int(width * 0.6), int(height * 0.6))
                                         else:
                                             new_size = (width, height)
 
-                                        if new_size[0] > 100 and new_size[1] > 100:
+                                        if new_size[0] > 50 and new_size[1] > 50:
                                             img = img.resize(new_size, Image.Resampling.LANCZOS)
 
                                         output = io.BytesIO()
