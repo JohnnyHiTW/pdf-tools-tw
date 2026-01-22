@@ -395,110 +395,42 @@ def create_zip(files: List[Tuple[str, bytes]]) -> bytes:
 def main_app():
     """主應用程式"""
 
-    # 讀取啟動畫面圖片
-    splash_image_path = Path("assets/splash.png")
-    if splash_image_path.exists():
-        img_base64 = get_image_base64(str(splash_image_path))
-    else:
-        img_base64 = ""
-
-    # 自訂 CSS 樣式 + 啟動畫面
-    st.markdown(f"""
+    # 自訂 CSS 樣式
+    st.markdown("""
     <style>
-        /* 啟動畫面樣式 */
-        .splash-overlay {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: url('data:image/png;base64,{img_base64}');
-            background-size: cover;
-            background-position: center;
-            background-color: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            z-index: 99999;
-            animation: fadeOut 0.5s ease-out 4s forwards;
-        }}
-        .splash-progress {{
-            width: 60%;
-            max-width: 400px;
-            margin-bottom: 80px;
-        }}
-        .splash-progress-bg {{
-            background: rgba(255,255,255,0.5);
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-        }}
-        .splash-progress-bar {{
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            height: 100%;
-            border-radius: 10px;
-            animation: loading 3.5s ease-out forwards;
-        }}
-        .splash-text {{
-            color: #555;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            font-family: "Microsoft JhengHei", sans-serif;
-        }}
-        @keyframes loading {{
-            0% {{ width: 0%; }}
-            100% {{ width: 100%; }}
-        }}
-        @keyframes fadeOut {{
-            0% {{ opacity: 1; pointer-events: all; }}
-            100% {{ opacity: 0; pointer-events: none; visibility: hidden; }}
-        }}
-
-        /* 主頁面樣式 */
-        .title-container {{
+        .title-container {
             text-align: center;
             position: relative;
-        }}
-        .brand-text {{
+        }
+        .brand-text {
             position: absolute;
             top: 0;
             left: 0;
             font-size: 0.85rem;
             color: #8B7355;
             font-family: "Microsoft JhengHei", "PingFang TC", serif;
-        }}
-        .main-title {{
+        }
+        .main-title {
             text-align: center;
             color: #5D4E37;
             margin-bottom: 0.5rem;
             font-family: "Microsoft JhengHei", "PingFang TC", serif;
-        }}
-        .sub-title {{
+        }
+        .sub-title {
             text-align: center;
             color: #8B7355;
             font-size: 1.1rem;
             margin-bottom: 2rem;
             font-family: "Microsoft JhengHei", "PingFang TC", serif;
-        }}
-        .stTabs [data-baseweb="tab-list"] {{
+        }
+        .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
-        }}
-        .stTabs [data-baseweb="tab"] {{
+        }
+        .stTabs [data-baseweb="tab"] {
             padding: 10px 20px;
             font-size: 1rem;
-        }}
+        }
     </style>
-
-    <!-- 啟動畫面 -->
-    <div class="splash-overlay" id="splash-screen">
-        <div class="splash-progress">
-            <div class="splash-progress-bg">
-                <div class="splash-progress-bar"></div>
-            </div>
-            <p class="splash-text">載入中...</p>
-        </div>
-    </div>
     """, unsafe_allow_html=True)
 
     # 主標題區塊（含左上角品牌文字）
@@ -709,5 +641,73 @@ def main_app():
     )
 
 
-# 主程式入口 - 直接顯示主應用程式
-main_app()
+# 主程式入口
+# 使用 session_state 控制啟動畫面
+if "splash_shown" not in st.session_state:
+    st.session_state.splash_shown = False
+
+if not st.session_state.splash_shown:
+    # 顯示啟動畫面
+    splash_image_path = Path("assets/splash.png")
+    if splash_image_path.exists():
+        img_base64 = get_image_base64(str(splash_image_path))
+    else:
+        img_base64 = ""
+
+    st.markdown(f"""
+    <style>
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        .stApp {{
+            background-image: url('data:image/png;base64,{img_base64}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }}
+        .splash-container {{
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            max-width: 400px;
+            text-align: center;
+        }}
+        .splash-progress-bg {{
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }}
+        .splash-progress-bar {{
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            height: 100%;
+            border-radius: 10px;
+            animation: loading 3.5s ease-out forwards;
+        }}
+        .splash-text {{
+            color: #555;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }}
+        @keyframes loading {{
+            0% {{ width: 0%; }}
+            100% {{ width: 100%; }}
+        }}
+    </style>
+    <div class="splash-container">
+        <div class="splash-progress-bg">
+            <div class="splash-progress-bar"></div>
+        </div>
+        <p class="splash-text">載入中...</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 等待 4 秒後標記已顯示
+    time.sleep(4)
+    st.session_state.splash_shown = True
+    st.rerun()
+else:
+    # 顯示主應用程式
+    main_app()
