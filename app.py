@@ -5,7 +5,6 @@ PDF 工具箱 - 網頁版
 
 import streamlit as st
 from pypdf import PdfReader, PdfWriter, PdfMerger
-import pikepdf
 from PIL import Image
 import io
 import zipfile
@@ -154,132 +153,30 @@ def format_size(size: int) -> str:
         return f"{size/(1024*1024):.2f} MB"
 
 
-def compress_image_in_pdf(image_data: bytes, quality: int) -> bytes:
-    """壓縮 PDF 中的圖片"""
-    try:
-        img = Image.open(io.BytesIO(image_data))
-
-        # 轉換為 RGB（如果是 RGBA 或其他模式）
-        if img.mode in ('RGBA', 'P'):
-            img = img.convert('RGB')
-
-        # 根據品質調整圖片大小
-        if quality <= 30:
-            # 高壓縮：縮小圖片尺寸
-            max_size = 1200
-            if max(img.size) > max_size:
-                ratio = max_size / max(img.size)
-                new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
-                img = img.resize(new_size, Image.Resampling.LANCZOS)
-
-        output = io.BytesIO()
-        img.save(output, format='JPEG', quality=quality, optimize=True)
-        return output.getvalue()
-    except Exception:
-        return image_data
-
-
 def compress_pdf(input_bytes: bytes, quality: str) -> Tuple[bytes, dict]:
     """壓縮 PDF 檔案"""
     original_size = len(input_bytes)
 
-    # 根據品質設定參數
-    quality_settings = {
-        "low": {"image_quality": 85, "compress_streams": True},
-        "medium": {"image_quality": 60, "compress_streams": True},
-        "high": {"image_quality": 30, "compress_streams": True}
-    }
-    settings = quality_settings.get(quality, quality_settings["medium"])
+    reader = PdfReader(io.BytesIO(input_bytes))
+    writer = PdfWriter()
 
-    try:
-        # 使用 pikepdf 進行更強的壓縮
-        pdf = pikepdf.open(io.BytesIO(input_bytes))
+    for page in reader.pages:
+        writer.add_page(page)
 
-        # 遍歷所有頁面，壓縮圖片
-        for page in pdf.pages:
-            if '/Resources' in page:
-                resources = page['/Resources']
-                if '/XObject' in resources:
-                    xobjects = resources['/XObject']
-                    for key in list(xobjects.keys()):
-                        xobj = xobjects[key]
-                        if xobj.get('/Subtype') == '/Image':
-                            try:
-                                # 嘗試壓縮圖片
-                                if '/Filter' in xobj:
-                                    filter_type = xobj['/Filter']
-                                    # 處理 DCTDecode (JPEG) 圖片
-                                    if filter_type == '/DCTDecode' or (
-                                        isinstance(filter_type, pikepdf.Array) and '/DCTDecode' in [str(f) for f in filter_type]
-                                    ):
-                                        raw_data = xobj.read_raw_bytes()
-                                        compressed = compress_image_in_pdf(raw_data, settings["image_quality"])
-                                        if len(compressed) < len(raw_data):
-                                            xobj.write(compressed, filter=pikepdf.Name('/DCTDecode'))
-                            except Exception:
-                                continue
+    if reader.metadata:
+        writer.add_metadata(reader.metadata)
 
-        # 儲存壓縮後的 PDF
-        output = io.BytesIO()
-        pdf.save(
-            output,
-            compress_streams=settings["compress_streams"],
-            object_stream_mode=pikepdf.ObjectStreamMode.generate,
-            recompress_flate=True
-        )
-        pdf.close()
+    # 壓縮內容串流
+    for page in writer.pages:
+        page.compress_content_streams()
 
-        output_bytes = output.getvalue()
-        compressed_size = len(output_bytes)
+    # 移除重複物件
+    writer.compress_identical_objects(remove_identicals=True, remove_orphans=True)
 
-        # 如果高壓縮後仍超過 4MB，嘗試進一步壓縮
-        if quality == "high" and compressed_size > 4 * 1024 * 1024:
-            # 使用更激進的圖片壓縮
-            pdf2 = pikepdf.open(io.BytesIO(output_bytes))
-            for page in pdf2.pages:
-                if '/Resources' in page:
-                    resources = page['/Resources']
-                    if '/XObject' in resources:
-                        xobjects = resources['/XObject']
-                        for key in list(xobjects.keys()):
-                            xobj = xobjects[key]
-                            if xobj.get('/Subtype') == '/Image':
-                                try:
-                                    if '/Filter' in xobj:
-                                        raw_data = xobj.read_raw_bytes()
-                                        # 使用更低的品質
-                                        compressed = compress_image_in_pdf(raw_data, 20)
-                                        if len(compressed) < len(raw_data):
-                                            xobj.write(compressed, filter=pikepdf.Name('/DCTDecode'))
-                                except Exception:
-                                    continue
-
-            output2 = io.BytesIO()
-            pdf2.save(output2, compress_streams=True, recompress_flate=True)
-            pdf2.close()
-            output_bytes = output2.getvalue()
-            compressed_size = len(output_bytes)
-
-    except Exception as e:
-        # 如果 pikepdf 失敗，回退到 pypdf
-        reader = PdfReader(io.BytesIO(input_bytes))
-        writer = PdfWriter()
-
-        for page in reader.pages:
-            writer.add_page(page)
-
-        if reader.metadata:
-            writer.add_metadata(reader.metadata)
-
-        for page in writer.pages:
-            page.compress_content_streams()
-
-        writer.compress_identical_objects(remove_identicals=True, remove_orphans=True)
-
-        output = io.BytesIO()
-        writer.write(output)
-        output_bytes = output.getvalue()
-        compressed_size = len(output_bytes)
+    output = io.BytesIO()
+    writer.write(output)
+    output_bytes = output.getvalue()
+    compressed_size = len(output_bytes)
 
     reduction = ((original_size - compressed_size) / original_size) * 100 if original_size > 0 else 0
 
